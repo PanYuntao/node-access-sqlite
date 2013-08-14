@@ -1,0 +1,151 @@
+
+/* manipulate blob datas
+
+sample 1. store and query blog data in memory.
+void       createdb()
+{
+	int ret;
+	sqlite3               *pdb = 0;
+	sqlite3_stmt      *stmt = 0;
+	char                  *error = 0;
+	char                  *sql = "insert into table1 values('value11',:aaa)";
+	int                     index;
+	static void          *value = "asdfadsfasdfjasdfjaksdfaskjdfakdsfaksfja";
+
+	ret = sqlite3_open("db1.sdb", &pdb);                    //´ò¿ªÊý¾Ý¿â£¬¸ú´ò¿ªÎÄ±¾ÎÄ¼þÒ»Ñù
+	if( ret != SQLITE_OK )return;
+	ret = sqlite3_exec(pdb, "create table table1(col1 char(20), col2 BLOB)", 0,0, &error );
+	if( ret != SQLITE_OK )return;
+	ret = sqlite3_prepare(pdb, sql,strlen(sql), &stmt, &error);
+	if( ret != SQLITE_OK )return;
+	index = sqlite3_bind_parameter_index(stmt, ":aaa");
+	ret = sqlite3_bind_blob(stmt, index, value, strlen(value), SQLITE_STATIC);
+	if( ret != SQLITE_OK )return;
+	ret = sqlite3_step(stmt);
+	if( ret != SQLITE_DONE )return;
+	sqlite3_close(pdb);
+}
+void querydb()
+{
+	int                     ret;
+	sqlite3   *pdb = 0;
+	sqlite3_stmt      *pstmt = 0;
+	char      *error = 0;
+	char      *sql = "select * from table1";
+	int                     len;
+	int                     i;
+	char      *name;
+	void       *value;
+	ret = sqlite3_open("db1.sdb", &pdb);
+	if( ret != SQLITE_OK )return;
+	ret = sqlite3_prepare(pdb, sql, strlen(sql), &pstmt, &error);
+	if( ret != SQLITE_OK )return;
+	while( 1 )
+	{
+		ret = sqlite3_step(pstmt);
+		if( ret != SQLITE_ROW )break;
+		name = sqlite3_column_text(pstmt, 0);
+		value = sqlite3_column_blob(pstmt, 1);
+		len = sqlite3_column_bytes(pstmt,1 );
+	}
+}
+sample 2. store and query blog data from file.
+savetodb()
+{
+	sqlite3_stmt *stat;
+	sqlite3_exec(db, "CREATE TABLE list (fliename varchar(128) UNIQUE, fzip blob);", 0, 0, &zErrMsg);
+	sqlite3_prepare(db, "insert into list values ('mmmm.rar',?);", -1, &stat, 0);
+	FILE *fp;
+	long filesize = 0;
+	char * ffile;
+	fp = fopen("mmmm.rar", "rb");
+	if(fp != NULL)
+	{
+		//¼ÆËãÎÄ¼þµÄ´óÐ¡
+		fseek(fp, 0, SEEK_END);
+		filesize = ftell(fp);
+		fseek(fp, 0, SEEK_SET);
+		//¶ÁÈ¡ÎÄ¼þ
+		ffile = new char[filesize+1];
+		size_t sz = fread(ffile, sizeof(char), filesize+1, fp);
+		fclose(fp);
+	}
+	//½«ÎÄ¼þÊý¾Ý°ó¶¨µ½insertÓï¾äÖÐ£¬Ìæ»»¡°£¿¡±²¿·Ö
+	sqlite3_bind_blob(stat, 1, ffile, filesize, NULL);
+	//Ö´ÐÐ°ó¶¨Ö®ºóµÄSQLÓï¾ä
+	sqlite3_step(stat);
+	ÕâÊ±Êý¾Ý¿âµ±ÖÐÒÑ¾­ÓÐÁËÒ»Ìõ°üº¬BLOB×Ö¶ÎµÄÊý¾Ý¡£½ÓÏÂÀ´ÎÒÃÇÒª¶ÁÈ¡ÕâÌõÊý¾Ý£º
+	//Ñ¡È¡¸ÃÌõÊý¾Ý
+	sqlite3_prepare(db, "select * from list;", -1, &stat, 0);
+	sqlite3_step(stat);
+	//µÃµ½¼ÍÂ¼ÖÐµÄBLOB×Ö¶Î
+	const void * test = sqlite3_column_blob(stat, 1);
+	//µÃµ½×Ö¶ÎÖÐÊý¾ÝµÄ³¤¶È
+	int size = sqlite3_column_bytes(stat, 1);
+	//¿½±´¸Ã×Ö¶Î
+	sprintf(buffer2, "%s", test);
+	´ËÊ±¿ÉÒÔ½«buffer2Ð´Èëµ½ÎÄ¼þµ±ÖÐ£¬ÖÁ´ËBLOBÊý¾Ý´¦ÀíÍê±Ï¡£
+}
+*/
+
+
+
+
+
+
+µ¼³ö£º
+sqlite file1.db .dump > dump-file
+µ¼Èë£º
+sqlite file2.db < dump-file
+
+µ¼³ö£º
+sqlite> .out file1.dump
+sqlite> select * from table1;
+µ¼Èë£º
+sqlite> .read file1.dump;
+
+To compile `libfactorial.dylib` on OS X:
+
+    $ gcc -dynamiclib -undefined suppress -flat_namespace factorial.c -o libfactorial.dylib
+
+To compile `libfactorial.so` on Linux/Solaris/etc.:
+
+    $ gcc -shared -fpic factorial.c -o libfactorial.so
+
+To run the example:
+
+    $ node factorial.js 35
+    Your output: 6399018521010896896
+
+
+
+ gcc -c sqlite3.c -o botansqlite3.o && gcc -c codec.cpp -o codec.o `pkg-config --cflags botan-1.10` && ar rcs libbotansqlite3.a botansqlite3.o codec.o
+
+ $ VERSION=1.10.0 # or whatever the current version is
+ $ install_name_tool -change $(otool -X -D libbotan-$VERSION.dylib) \
+     $PWD/libbotan-$VERSION.dylib check
+
+
+     curl http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz -o pkg-config-0.28.tar.gz
+
+     g++ test_sqlite.cpp -o test_sqlite `botan-config-1.10 --libs` ./libbotansqlite3.a
+
+
+     libtool -dynamic -o c.dylib a.o b.o
+
+     gcc -dynamiclib -o c.dylib a.c b.c
+
+     $ gcc -dynamiclib -undefined suppress -flat_namespace -o botansqlite3.o
+
+---------------------------------
+
+      gcc -dynamiclib -o sqlite3.dylib  sqlite3secure.c
+
+      bit32 ----   
+      gcc -dynamiclib -arch i386 -o sqlite3.dylib  sqlite3secure.c 
+
+      查看当前包信息
+      lipo -info *.dylib
+
+
+
